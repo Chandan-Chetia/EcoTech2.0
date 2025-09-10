@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean the Ocean</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #00bfff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        canvas {
+            background-color: #4682b4;
+            border: 2px solid #000;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        #start-screen, #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #228b22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #006400;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            #ui {
+                font-size: 1em;
+            }
+
+            button {
+                font-size: 0.8em;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>Time: <span id="timer">60</span></div>
+            <div>Level: <span id="level">1</span></div>
+        </div>
+        <div id="start-screen">
+            <h1>Clean the Ocean</h1>
+            <p>Collect trash without harming fish!</p>
+            <p>Use arrow keys to move the diver.</p>
+            <button id="start">Start Game</button>
+        </div>
+        <div id="game-over">
+            <h1>Game Over</h1>
+            <p>Final Score: <span id="final-score"></span></p>
+            <button id="restart">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const levelEl = document.getElementById('level');
+        const startScreen = document.getElementById('start-screen');
+        const gameOver = document.getElementById('game-over');
+        const finalScoreEl = document.getElementById('final-score');
+        const startButton = document.getElementById('start');
+        const restartButton = document.getElementById('restart');
+
+        let width = window.innerWidth * 0.9;
+        let height = window.innerHeight * 0.7;
+        canvas.width = width > 800 ? 800 : width;
+        canvas.height = height > 600 ? 600 : height;
+
+        window.addEventListener('resize', () => {
+            width = window.innerWidth * 0.9;
+            height = window.innerHeight * 0.7;
+            canvas.width = width > 800 ? 800 : width;
+            canvas.height = height > 600 ? 600 : height;
+        });
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 30,
+            speed: 5
+        };
+
+        let trash = [];
+        let fish = [];
+        let score = 0;
+        let timeLeft = 60;
+        let level = 1;
+        let gameRunning = false;
+        let timerInterval;
+
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        function generateItem(type) {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 20,
+                speed: level * 0.5 + 1,
+                type: type,
+                dx: (Math.random() - 0.5) * 2, // For fish movement
+                dy: type === 'trash' ? 1 + level * 0.2 : (Math.random() - 0.5) * 2
+            };
+        }
+
+        function updatePlayer() {
+            if (keys['ArrowUp'] && player.y > 0) player.y -= player.speed;
+            if (keys['ArrowDown'] && player.y < canvas.height - player.size) player.y += player.speed;
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.size) player.x += player.speed;
+        }
+
+        function updateItems(items, isFish) {
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.x += item.dx;
+                item.y += item.dy;
+
+                // Wrap around or respawn
+                if (item.x < 0 || item.x > canvas.width || item.y < 0 || item.y > canvas.height) {
+                    items.splice(i, 1);
+                    items.push(generateItem(item.type));
+                }
+
+                // Collision with player
+                if (Math.hypot(player.x - item.x, player.y - item.y) < player.size / 2 + item.size / 2) {
+                    if (item.type === 'trash') {
+                        score += 10;
+                    } else {
+                        score -= 5;
+                        if (score < 0) score = 0;
+                    }
+                    items.splice(i, 1);
+                    items.push(generateItem(item.type));
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player (diver)
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw trash
+            trash.forEach(item => {
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(item.x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+            });
+
+            // Draw fish
+            fish.forEach(item => {
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.ellipse(item.x, item.y, item.size / 2, item.size / 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            updatePlayer();
+            updateItems(trash, false);
+            updateItems(fish, true);
+            draw();
+            scoreEl.textContent = score;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startTimer() {
+            timeLeft = 60;
+            timerEl.textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function levelUp() {
+            if (score >= level * 50) {
+                level++;
+                levelEl.textContent = level;
+                player.speed += 0.5;
+                // Add more items
+                trash.push(generateItem('trash'));
+                fish.push(generateItem('fish'));
+            }
+        }
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameRunning = true;
+            score = 0;
+            level = 1;
+            timeLeft = 60;
+            trash = Array(5).fill().map(() => generateItem('trash'));
+            fish = Array(5).fill().map(() => generateItem('fish'));
+            startTimer();
+            gameLoop();
+            setInterval(levelUp, 1000); // Check for level up every second
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            gameRunning = false;
+            finalScoreEl.textContent = score;
+            gameOver.style.display = 'block';
+        }
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', () => {
+            gameOver.style.display = 'none';
+            startGame();
+        });
+
+        startScreen.style.display = 'block';
+    </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildlife Rescue: Memory Match Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #228b22 0%, #006400 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            padding: clamp(10px, 2vw, 15px);
+            color: #333;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: clamp(15px, 4vw, 30px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 95%;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            color: #006400;
+            margin-bottom: clamp(10px, 2vw, 15px);
+            font-size: clamp(1.8em, 5vw, 2.5em);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .instructions {
+            font-size: clamp(0.9em, 3vw, 1.1em);
+            margin-bottom: clamp(15px, 3vw, 20px);
+            color: #2d3436;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: clamp(15px, 3vw, 20px);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #228b22, #006400);
+            color: white;
+            padding: clamp(10px, 2vw, 15px) clamp(15px, 3vw, 25px);
+            border-radius: 10px;
+            font-size: clamp(0.9em, 3vw, 1.1em);
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(10px, 2vw, 15px);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            height: clamp(80px, 15vw, 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.9em, 3vw, 1.2em);
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            touch-action: manipulation;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #228b22, #006400);
+            color: white;
+            font-size: clamp(2em, 6vw, 3em);
+        }
+
+        .card-front {
+            transform: rotateY(180deg);
+        }
+
+        .message {
+            margin-top: clamp(15px, 3vw, 20px);
+            font-size: clamp(0.9em, 3vw, 1.2em);
+            color: #006400;
+            min-height: 50px;
+            font-weight: bold;
+        }
+
+        .game-over {
+            display: none;
+            margin-top: clamp(15px, 3vw, 20px);
+            padding: clamp(15px, 3vw, 20px);
+            background: #e6ffe6;
+            border-radius: 10px;
+            font-size: clamp(0.9em, 3vw, 1.1em);
+        }
+
+        .game-over h2 {
+            font-size: clamp(1.5em, 4vw, 2em);
+            margin-bottom: 10px;
+        }
+
+        .restart-btn {
+            margin: clamp(15px, 3vw, 20px) auto;
+            padding: clamp(10px, 2vw, 15px) clamp(25px, 5vw, 40px);
+            background: linear-gradient(135deg, #228b22, #006400);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(0.9em, 3vw, 1.1em);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .restart-btn:hover, .restart-btn:active {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .game-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .info-box {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .memory-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .instructions {
+                font-size: 0.9em;
+            }
+
+            .card {
+                height: clamp(70px, 20vw, 100px);
+                font-size: 0.9em;
+            }
+
+            .card-back {
+                font-size: 2em;
+            }
+
+            .game-over h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌿 Wildlife Rescue: Memory Match 🌿</h1>
+        <p class="instructions">Match animals to conservation tips to rescue them! Flip two cards at a time to find pairs.</p>
+        
+        <div class="game-info">
+            <div class="info-box">Score: <span id="score">0</span></div>
+            <div class="info-box">Time: <span id="timer">120</span>s</div>
+            <div class="info-box">Matches Left: <span id="matches-left">6</span></div>
+        </div>
+
+        <div class="memory-grid" id="memory-grid"></div>
+
+        <div class="message" id="message"></div>
+
+        <div class="game-over" id="game-over">
+            <h2>Rescue Mission Complete!</h2>
+            <p>Final Score: <span id="final-score"></span></p>
+            <p>Rescued Animals: <span id="rescued-count"></span>/6</p>
+            <p id="eco-message"></p>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const cardsData = [
+            { type: 'animal', content: '🐼 Panda', match: 'Protect bamboo forests to save pandas.', fact: 'Pandas are endangered due to habitat loss. Conservation helps by protecting forests.' },
+            { type: 'tip', content: 'Protect bamboo forests to save pandas.', match: '🐼 Panda' },
+            { type: 'animal', content: '🐯 Tiger', match: 'Stop poaching to protect tigers.', fact: 'Tigers are threatened by poaching. Anti-poaching efforts are crucial.' },
+            { type: 'tip', content: 'Stop poaching to protect tigers.', match: '🐯 Tiger' },
+            { type: 'animal', content: '🐘 Elephant', match: 'Ban ivory trade to save elephants.', fact: 'Elephants are poached for ivory. Banning trade helps protect them.' },
+            { type: 'tip', content: 'Ban ivory trade to save elephants.', match: '🐘 Elephant' },
+            { type: 'animal', content: '🐢 Sea Turtle', match: 'Reduce plastic in oceans for turtles.', fact: 'Sea turtles mistake plastic for food. Reducing plastic saves them.' },
+            { type: 'tip', content: 'Reduce plastic in oceans for turtles.', match: '🐢 Sea Turtle' },
+            { type: 'animal', content: '🦏 Rhino', match: 'Fight against horn trade for rhinos.', fact: 'Rhinos are hunted for horns. Conservation fights illegal trade.' },
+            { type: 'tip', content: 'Fight against horn trade for rhinos.', match: '🦏 Rhino' },
+            { type: 'animal', content: '🦧 Orangutan', match: 'Choose sustainable palm oil for orangutans.', fact: 'Orangutans lose habitat to palm oil. Sustainable choices help.' },
+            { type: 'tip', content: 'Choose sustainable palm oil for orangutans.', match: '🦧 Orangutan' }
+        ];
+
+        let score = 0;
+        let timeLeft = 120;
+        let matchesLeft = 6;
+        let timerInterval;
+        let flippedCards = [];
+        let gameActive = true;
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function createCard(item) {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.content = item.content;
+            card.dataset.match = item.match;
+            card.dataset.type = item.type;
+            card.dataset.fact = item.fact || '';
+
+            const front = document.createElement('div');
+            front.classList.add('card-face', 'card-front');
+            front.textContent = item.content;
+
+            const back = document.createElement('div');
+            back.classList.add('card-face', 'card-back');
+            back.textContent = '?';
+
+            card.appendChild(back);
+            card.appendChild(front);
+
+            card.addEventListener('click', flipCard);
+            card.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                flipCard(e);
+            });
+
+            return card;
+        }
+
+        function initializeGame() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            const shuffledCards = shuffle([...cardsData]);
+            shuffledCards.forEach(item => {
+                grid.appendChild(createCard(item));
+            });
+
+            score = 0;
+            timeLeft = 120;
+            matchesLeft = 6;
+            gameActive = true;
+            flippedCards = [];
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('matches-left').textContent = matchesLeft;
+            document.getElementById('message').textContent = '';
+            document.getElementById('game-over').style.display = 'none';
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').parentElement.style.background = 'linear-gradient(135deg, #d63031, #ff6b6b)';
+                }
+
+                if (timeLeft <= 0 || matchesLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function flipCard(e) {
+            if (!gameActive || flippedCards.length >= 2 || e.currentTarget.classList.contains('flipped')) return;
+
+            e.currentTarget.classList.add('flipped');
+            flippedCards.push(e.currentTarget);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            if (card1.dataset.match === card2.dataset.content && card2.dataset.match === card1.dataset.content) {
+                score += 10;
+                matchesLeft--;
+                document.getElementById('score').textContent = score;
+                document.getElementById('matches-left').textContent = matchesLeft;
+
+                const animal = card1.dataset.type === 'animal' ? card1 : card2;
+                showMessage(`You rescued the ${animal.dataset.content}! Fact: ${animal.dataset.fact}`);
+
+                setTimeout(() => {
+                    card1.style.visibility = 'hidden';
+                    card2.style.visibility = 'hidden';
+                    flippedCards = [];
+                    if (matchesLeft === 0) endGame();
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            setTimeout(() => {
+                messageEl.textContent = '';
+            }, 4000);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            gameActive = false;
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('rescued-count').textContent = 6 - matchesLeft;
+
+            let ecoMessage = '';
+            if (6 - matchesLeft === 6) {
+                ecoMessage = 'Amazing! You rescued all animals. Keep conserving wildlife!';
+            } else if (6 - matchesLeft >= 4) {
+                ecoMessage = 'Great job! Every action helps endangered species.';
+            } else {
+                ecoMessage = 'Good effort! Learn more about conservation to rescue more next time.';
+            }
+
+            document.getElementById('eco-message').textContent = ecoMessage;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function restartGame() {
+            initializeGame();
+        }
+
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>

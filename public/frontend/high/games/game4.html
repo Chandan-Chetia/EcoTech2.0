@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environmental Word Scramble Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #228b22;
+            margin-bottom: 20px;
+        }
+
+        #game {
+            display: none;
+        }
+
+        #scrambled-word {
+            font-size: 2em;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            color: #ff4500;
+        }
+
+        #input {
+            padding: 10px;
+            font-size: 1.2em;
+            width: 80%;
+            margin-bottom: 10px;
+            border: 2px solid #228b22;
+            border-radius: 5px;
+        }
+
+        #submit {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #228b22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #submit:hover {
+            background-color: #006400;
+        }
+
+        #timer {
+            font-size: 1.5em;
+            margin: 10px 0;
+            color: #ff0000;
+        }
+
+        #score {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        #message {
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #228b22;
+        }
+
+        #start {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #228b22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #start:hover {
+            background-color: #006400;
+        }
+
+        #end-screen {
+            display: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            #scrambled-word {
+                font-size: 1.5em;
+            }
+
+            #input {
+                font-size: 1em;
+                width: 90%;
+            }
+
+            #submit, #start {
+                font-size: 1em;
+                padding: 10px 20px;
+            }
+
+            #timer, #score, #message {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Environmental Word Scramble</h1>
+        <p>Unscramble environment-related words before time runs out! High school level.</p>
+        <button id="start">Start Game</button>
+
+        <div id="game">
+            <div id="scrambled-word"></div>
+            <input type="text" id="input" placeholder="Enter your guess">
+            <button id="submit">Submit</button>
+            <div id="timer">Time left: 30s</div>
+            <div id="score">Score: 0</div>
+            <div id="message"></div>
+        </div>
+
+        <div id="end-screen">
+            <h2>Game Over!</h2>
+            <div id="final-score"></div>
+            <button id="restart">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            { word: 'ecosystem', hint: 'A community of living organisms and their environment' },
+            { word: 'pollution', hint: 'Contamination of the environment' },
+            { word: 'recycling', hint: 'Process of converting waste into reusable material' },
+            { word: 'biodiversity', hint: 'Variety of life in the world or a particular habitat' },
+            { word: 'greenhouse', hint: 'Effect causing global warming' },
+            { word: 'sustainability', hint: 'Meeting needs without compromising future generations' },
+            { word: 'deforestation', hint: 'Clearing of forests on a large scale' },
+            { word: 'renewable', hint: 'Energy from sources that are naturally replenishing' },
+            { word: 'conservation', hint: 'Protection and preservation of natural resources' },
+            { word: 'climate', hint: 'Long-term weather patterns in an area' }
+        ];
+
+        let currentWordIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 60;
+
+        const startButton = document.getElementById('start');
+        const gameDiv = document.getElementById('game');
+        const endScreen = document.getElementById('end-screen');
+        const scrambledWordEl = document.getElementById('scrambled-word');
+        const inputEl = document.getElementById('input');
+        const submitButton = document.getElementById('submit');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const messageEl = document.getElementById('message');
+        const finalScoreEl = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart');
+
+        function shuffleWord(word) {
+            return word.split('').sort(() => Math.random() - 0.5).join('');
+        }
+
+        function startTimer() {
+            timeLeft = 60;
+            timerEl.textContent = `Time left: ${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    messageEl.textContent = 'Time\'s up! Moving to next word.';
+                    nextWord();
+                }
+            }, 1000);
+        }
+
+        function loadWord() {
+            if (currentWordIndex >= words.length) {
+                endGame();
+                return;
+            }
+            const { word } = words[currentWordIndex];
+            const scrambled = shuffleWord(word);
+            scrambledWordEl.textContent = scrambled;
+            messageEl.textContent = ''; // Clear message
+            inputEl.value = ''; // Clear input
+            startTimer();
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            const guess = inputEl.value.toLowerCase();
+            const correct = words[currentWordIndex].word.toLowerCase();
+            if (guess === correct) {
+                messageEl.textContent = 'Correct!';
+                score += timeLeft; // Bonus points for time left
+                scoreEl.textContent = `Score: ${score}`;
+            } else {
+                messageEl.textContent = `Incorrect! The word was ${correct}.`;
+            }
+            setTimeout(nextWord, 2000); // Wait 2 seconds before next word
+        }
+
+        function nextWord() {
+            currentWordIndex++;
+            loadWord();
+        }
+
+        function endGame() {
+            gameDiv.style.display = 'none';
+            endScreen.style.display = 'block';
+            finalScoreEl.textContent = `Final Score: ${score}`;
+        }
+
+        function startGame() {
+            startButton.style.display = 'none';
+            gameDiv.style.display = 'block';
+            currentWordIndex = 0;
+            score = 0;
+            scoreEl.textContent = `Score: ${score}`;
+            loadWord();
+        }
+
+        startButton.addEventListener('click', startGame);
+        submitButton.addEventListener('click', checkAnswer);
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+        restartButton.addEventListener('click', () => {
+            endScreen.style.display = 'none';
+            startGame();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant a Tree Simulator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+        #tree {
+            font-size: 100px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #333;
+        }
+        #timer {
+            font-size: 16px;
+            color: #666;
+        }
+        /* Responsive for mobile */
+        @media (max-width: 480px) {
+            #tree {
+                font-size: 80px;
+            }
+            button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Plant a Tree Simulator</h1>
+        <p>Water your tree to help it grow over time!</p>
+        <div id="tree">🌰</div>
+        <button id="water">Water the Tree</button>
+        <div id="status">Your tree is planted. Water it to grow!</div>
+        <div id="timer">Time: 0 seconds</div>
+    </div>
+
+    <script>
+        let stage = 0;
+        let stages = ['🌰', '🌱', '🌿', '🌳'];
+        let time = 0;
+        let watered = false;
+        let needsWater = false;
+
+        const treeElement = document.getElementById('tree');
+        const statusElement = document.getElementById('status');
+        const timerElement = document.getElementById('timer');
+        const waterButton = document.getElementById('water');
+
+        // Update timer and check growth every second
+        setInterval(() => {
+            time++;
+            timerElement.innerText = `Time: ${time} seconds`;
+
+            // Every 10 seconds, check if watered
+            if (time % 10 === 0) {
+                if (watered) {
+                    stage++;
+                    if (stage > 3) stage = 3;
+                    treeElement.innerText = stages[stage];
+                    statusElement.innerText = 'Your tree grew! Keep watering.';
+                    watered = false;
+                    needsWater = false;
+                } else {
+                    statusElement.innerText = 'Tree needs water to grow!';
+                    needsWater = true;
+                }
+            }
+        }, 1000);
+
+        // Water button click
+        waterButton.addEventListener('click', () => {
+            watered = true;
+            statusElement.innerText = 'You watered the tree! Waiting for growth...';
+            needsWater = false;
+        });
+    </script>
+</body>
+</html>

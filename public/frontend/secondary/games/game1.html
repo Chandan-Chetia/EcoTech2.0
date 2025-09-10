@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Quiz Adventure</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #quiz-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+
+        #question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background-color: #f1f8e9;
+            border: 2px solid #c8e6c9;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: #dcedc8;
+        }
+
+        #feedback {
+            font-size: 1.1em;
+            margin: 15px 0;
+            color: #ff5722;
+        }
+
+        #score {
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        #next-btn, #restart-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        #next-btn:hover, #restart-btn:hover {
+            background-color: #388e3c;
+        }
+
+        #adventure-map {
+            margin: 20px 0;
+            font-size: 1.5em;
+            color: #2196f3;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            #quiz-container {
+                padding: 15px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            #question {
+                font-size: 1em;
+            }
+
+            .option {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+
+            #next-btn, #restart-btn {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <h1>Eco Quiz Adventure</h1>
+        <p>Help save the planet by answering questions correctly! Each right answer moves you forward on your adventure.</p>
+        <div id="adventure-map">🌍 Starting your journey...</div>
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="feedback"></div>
+        <button id="next-btn" style="display: none;">Next Question</button>
+        <button id="restart-btn" style="display: none;">Restart Adventure</button>
+        <div id="score"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What does recycling mean?",
+                options: ["Throwing things away", "Reusing old materials to make new things", "Buying new toys"],
+                answer: 1,
+                feedback: "Recycling helps reduce waste and save resources!"
+            },
+            {
+                question: "Why should we turn off lights when we leave a room?",
+                options: ["To save electricity", "To make the room dark", "To play hide and seek"],
+                answer: 0,
+                feedback: "Saving electricity helps protect the environment!"
+            },
+            {
+                question: "What can we do to save water?",
+                options: ["Take long showers", "Turn off the tap while brushing teeth", "Leave the hose running"],
+                answer: 1,
+                feedback: "Saving water is important for our planet!"
+            },
+            {
+                question: "What is a renewable energy source?",
+                options: ["Coal", "Sunlight", "Oil"],
+                answer: 1,
+                feedback: "Solar power from the sun is renewable and clean!"
+            },
+            {
+                question: "Why is planting trees good for the Earth?",
+                options: ["Trees make noise", "Trees give us oxygen and clean the air", "Trees take up space"],
+                answer: 1,
+                feedback: "Trees help fight climate change!"
+            },
+            {
+                question: "What should you do with plastic bottles?",
+                options: ["Throw them in the ocean", "Recycle them", "Burn them"],
+                answer: 1,
+                feedback: "Recycling plastic reduces pollution!"
+            },
+            {
+                question: "What is composting?",
+                options: ["Turning food scraps into soil", "Eating more food", "Throwing food away"],
+                answer: 0,
+                feedback: "Composting helps make rich soil for plants!"
+            },
+            {
+                question: "Why should we use reusable bags?",
+                options: ["To create more plastic waste", "To reduce plastic pollution", "To carry less things"],
+                answer: 1,
+                feedback: "Reusable bags help protect animals and oceans!"
+            },
+            {
+                question: "What does sustainability mean?",
+                options: ["Using things up quickly", "Using resources in a way that they last for the future", "Wasting energy"],
+                answer: 1,
+                feedback: "Sustainability keeps our planet healthy for everyone!"
+            },
+            {
+                question: "How can we help protect animals?",
+                options: ["Destroy their homes", "Keep beaches clean and recycle", "Make loud noises"],
+                answer: 1,
+                feedback: "Protecting habitats saves wildlife!"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        const mapStages = ["🌍 Starting...", "🌳 Forest Path", "🏞️ River Crossing", "⛰️ Mountain Climb", "🌊 Ocean Shore", "🏙️ Green City", "🌿 Eco Village", "🌞 Solar Farm", "🌲 Wildlife Sanctuary", "🚀 To the Future!", "🌟 Planet Saved!"];
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question').textContent = q.question;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('div');
+                btn.classList.add('option');
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(btn);
+            });
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('next-btn').style.display = 'none';
+            updateMap();
+            updateScore();
+        }
+
+        function checkAnswer(selected) {
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, idx) => {
+                opt.onclick = null; // Disable clicks
+                if (idx === q.answer) {
+                    opt.style.backgroundColor = '#c8e6c9'; // Correct
+                }
+                if (idx === selected && idx !== q.answer) {
+                    opt.style.backgroundColor = '#ffcdd2'; // Wrong
+                }
+            });
+            if (selected === q.answer) {
+                score++;
+                document.getElementById('feedback').textContent = 'Correct! ' + q.feedback;
+                document.getElementById('feedback').style.color = '#4caf50';
+            } else {
+                document.getElementById('feedback').textContent = 'Oops! The correct answer is: ' + q.options[q.answer] + '. ' + q.feedback;
+                document.getElementById('feedback').style.color = '#f44336';
+            }
+            if (currentQuestion < questions.length - 1) {
+                document.getElementById('next-btn').style.display = 'block';
+            } else {
+                document.getElementById('restart-btn').style.display = 'block';
+                updateMap(true);
+                updateScore(true);
+            }
+        }
+
+        function updateMap(isEnd = false) {
+            const progress = isEnd ? mapStages.length - 1 : currentQuestion + 1;
+            document.getElementById('adventure-map').textContent = mapStages[Math.min(progress, mapStages.length - 1)];
+        }
+
+        function updateScore(isEnd = false) {
+            document.getElementById('score').textContent = isEnd ? `Final Score: ${score} out of ${questions.length}` : `Score: ${score} / ${questions.length}`;
+        }
+
+        document.getElementById('next-btn').onclick = () => {
+            currentQuestion++;
+            loadQuestion();
+        };
+
+        document.getElementById('restart-btn').onclick = () => {
+            currentQuestion = 0;
+            score = 0;
+            loadQuestion();
+            document.getElementById('restart-btn').style.display = 'none';
+            updateMap();
+            updateScore();
+        };
+
+        loadQuestion();
+    </script>
+</body>
+</html>

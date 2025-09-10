@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Hangman</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #228B22; /* Forest green */
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        #game-container {
+            width: 90vw;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        #canvas {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            background-color: #556B2F; /* Olive green */
+            border: 2px solid #fff;
+            margin: 0 auto;
+        }
+
+        #word-display {
+            font-size: 2em;
+            margin: 20px 0;
+            letter-spacing: 5px;
+        }
+
+        #guesses-left {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        #guessed-letters {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        #input-container {
+            margin: 20px 0;
+        }
+
+        #letter-input {
+            padding: 10px;
+            font-size: 1em;
+            width: 50px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        #guess-btn, #hint-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #32CD32;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        #hint-display {
+            font-size: 1em;
+            margin: 10px 0;
+            color: #FFD700; /* Gold for hints */
+        }
+
+        #instructions {
+            font-size: 1em;
+            margin: 20px 0;
+            max-width: 500px;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        #keyboard {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .key-btn {
+            padding: 10px;
+            font-size: 1em;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .key-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            #canvas {
+                width: 80vw;
+                height: 150px;
+            }
+
+            #word-display {
+                font-size: 1.5em;
+                letter-spacing: 3px;
+            }
+
+            #letter-input {
+                width: 40px;
+                font-size: 0.9em;
+            }
+
+            #guess-btn, #hint-btn {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+
+            #keyboard {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 3px;
+            }
+
+            .key-btn {
+                padding: 8px;
+                font-size: 0.8em;
+            }
+
+            #instructions {
+                font-size: 0.8em;
+                margin: 10px;
+                padding: 10px;
+                max-width: 90%;
+                line-height: 1.4;
+            }
+        }
+
+        /* Smaller screens */
+        @media (max-width: 400px) {
+            #canvas {
+                width: 90vw;
+                height: 120px;
+            }
+
+            #word-display {
+                font-size: 1.2em;
+                letter-spacing: 2px;
+            }
+
+            #guesses-left, #guessed-letters, #hint-display {
+                font-size: 1em;
+            }
+
+            #letter-input {
+                width: 35px;
+                font-size: 0.8em;
+            }
+
+            #guess-btn, #hint-btn {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+
+            #keyboard {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 2px;
+            }
+
+            .key-btn {
+                padding: 6px;
+                font-size: 0.7em;
+            }
+
+            #instructions {
+                font-size: 0.7em;
+                margin: 5px;
+                padding: 8px;
+                max-width: 95%;
+                line-height: 1.3;
+            }
+        }
+        h1{
+            padding-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Eco Hangman</h1>
+        <div id="instructions">
+            <strong>How to Play:</strong> Guess the environmental science word by entering one letter at a time. You have 6 wrong guesses before the game ends. Each wrong guess adds a part to the hangman. Use the on-screen keyboard or type a letter and click "Guess". Click "Hint" for a clue about the word (costs 1 guess). Win by revealing the full word before running out of guesses!
+        </div>
+        <canvas id="canvas"></canvas>
+        <div id="word-display"></div>
+        <div id="guesses-left">Guesses Left: 6</div>
+        <div id="guessed-letters">Guessed Letters: </div>
+        <div id="hint-display">Hint: </div>
+        <div id="input-container">
+            <input type="text" id="letter-input" maxlength="1" placeholder="A-Z">
+            <button id="guess-btn">Guess</button>
+            <button id="hint-btn">Hint</button>
+        </div>
+        <div id="keyboard"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const wordDisplay = document.getElementById('word-display');
+        const guessesLeftElement = document.getElementById('guesses-left');
+        const guessedLettersElement = document.getElementById('guessed-letters');
+        const hintDisplay = document.getElementById('hint-display');
+        const letterInput = document.getElementById('letter-input');
+        const guessButton = document.getElementById('guess-btn');
+        const hintButton = document.getElementById('hint-btn');
+        const keyboard = document.getElementById('keyboard');
+
+        // Environmental science words with hints
+        const words = [
+            { word: 'ECOSYSTEM', hint: 'A community of living organisms interacting with their environment.' },
+            { word: 'POLLUTION', hint: 'Harmful substances introduced into the environment.' },
+            { word: 'RECYCLING', hint: 'Process of reusing materials to reduce waste.' },
+            { word: 'BIODIVERSITY', hint: 'Variety of life in an ecosystem.' },
+            { word: 'CARBON', hint: 'Element central to greenhouse gas emissions.' },
+            { word: 'SUSTAINABLE', hint: 'Practices that meet needs without harming future generations.' },
+            { word: 'RENEWABLE', hint: 'Resources that can be naturally replenished.' },
+            { word: 'DEFORESTATION', hint: 'Clearing of forests leading to environmental harm.' },
+            { word: 'GREENHOUSE', hint: 'Gases trapping heat in the atmosphere.' },
+            { word: 'COMPOST', hint: 'Organic matter decomposed for soil enrichment.' }
+        ];
+
+        let currentWord = '';
+        let currentHint = '';
+        let displayedWord = [];
+        let guessedLetters = [];
+        let guessesLeft = 6;
+        let gameOver = false;
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth > 300 ? 300 : canvas.parentElement.clientWidth * 0.8;
+            canvas.height = canvas.width * 2 / 3;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Draw hangman
+        function drawHangman() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+
+            // Base
+            if (guessesLeft < 6) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.1, canvas.height * 0.9);
+                ctx.lineTo(canvas.width * 0.4, canvas.height * 0.9);
+                ctx.stroke();
+            }
+            // Pole
+            if (guessesLeft < 5) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.25, canvas.height * 0.9);
+                ctx.lineTo(canvas.width * 0.25, canvas.height * 0.1);
+                ctx.stroke();
+            }
+            // Top bar
+            if (guessesLeft < 4) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.25, canvas.height * 0.1);
+                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.1);
+                ctx.stroke();
+            }
+            // Rope
+            if (guessesLeft < 3) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.1);
+                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.2);
+                ctx.stroke();
+            }
+            // Head
+            if (guessesLeft < 2) {
+                ctx.beginPath();
+                ctx.arc(canvas.width * 0.5, canvas.height * 0.25, canvas.height * 0.05, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            // Body
+            if (guessesLeft < 1) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.3);
+                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.5);
+                ctx.stroke();
+            }
+        }
+
+        // Start new game
+        function startGame() {
+            const wordObj = words[Math.floor(Math.random() * words.length)];
+            currentWord = wordObj.word;
+            currentHint = wordObj.hint;
+            displayedWord = Array(currentWord.length).fill('_');
+            guessedLetters = [];
+            guessesLeft = 6;
+            gameOver = false;
+            hintDisplay.textContent = 'Hint: ';
+            updateDisplay();
+            drawHangman();
+            createKeyboard();
+            letterInput.disabled = false;
+            guessButton.disabled = false;
+            hintButton.disabled = false;
+            letterInput.value = '';
+            letterInput.focus();
+        }
+
+        // Update word and guesses display
+        function updateDisplay() {
+            if (gameOver && guessesLeft === 0) {
+                wordDisplay.textContent = currentWord.split('').join(' ');
+            } else {
+                wordDisplay.textContent = displayedWord.join(' ');
+            }
+            guessesLeftElement.textContent = `Guesses Left: ${guessesLeft}`;
+            guessedLettersElement.textContent = `Guessed Letters: ${guessedLetters.join(', ')}`;
+        }
+
+        // Create virtual keyboard
+        function createKeyboard() {
+            keyboard.innerHTML = '';
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            letters.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.textContent = letter;
+                btn.classList.add('key-btn');
+                btn.addEventListener('click', () => handleGuess(letter));
+                if (guessedLetters.includes(letter)) {
+                    btn.disabled = true;
+                }
+                keyboard.appendChild(btn);
+            });
+        }
+
+        // Handle guess
+        function handleGuess(letter) {
+            if (gameOver || guessedLetters.includes(letter)) return;
+
+            letter = letter.toUpperCase();
+            guessedLetters.push(letter);
+
+            if (currentWord.includes(letter)) {
+                for (let i = 0; i < currentWord.length; i++) {
+                    if (currentWord[i] === letter) {
+                        displayedWord[i] = letter;
+                    }
+                }
+            } else {
+                guessesLeft--;
+                drawHangman();
+            }
+
+            updateDisplay();
+            createKeyboard();
+
+            // Check win/lose
+            if (displayedWord.join('') === currentWord) {
+                gameOver = true;
+                setTimeout(() => {
+                    alert('You Win! The word was ' + currentWord);
+                    startGame();
+                }, 100);
+            } else if (guessesLeft === 0) {
+                gameOver = true;
+                updateDisplay(); // Show the full word
+                setTimeout(() => {
+                    alert('Game Over! The word was ' + currentWord);
+                    startGame();
+                }, 100);
+            }
+        }
+
+        // Handle hint
+        function showHint() {
+            if (gameOver || guessesLeft === 0) return;
+            if (hintDisplay.textContent === 'Hint: ' + currentHint) return; // Hint already shown
+            guessesLeft--;
+            drawHangman();
+            hintDisplay.textContent = 'Hint: ' + currentHint;
+            updateDisplay();
+            if (guessesLeft === 0) {
+                gameOver = true;
+                updateDisplay(); // Show the full word
+                setTimeout(() => {
+                    alert('Game Over! The word was ' + currentWord);
+                    startGame();
+                }, 100);
+            }
+        }
+
+        // Input handling
+        guessButton.addEventListener('click', () => {
+            const letter = letterInput.value.toUpperCase();
+            if (/^[A-Z]$/.test(letter)) {
+                handleGuess(letter);
+                letterInput.value = '';
+            }
+        });
+
+        hintButton.addEventListener('click', showHint);
+
+        letterInput.addEventListener('input', () => {
+            letterInput.value = letterInput.value.toUpperCase();
+        });
+
+        letterInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                guessButton.click();
+            }
+        });
+
+        // Initialize
+        startGame();
+    </script>
+</body>
+</html>
