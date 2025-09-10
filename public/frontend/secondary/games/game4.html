@@ -1,111 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant a Tree Simulator</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f0f8ff;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-        }
-        #tree {
-            font-size: 100px;
-            margin: 20px 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #status {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #333;
-        }
-        #timer {
-            font-size: 16px;
-            color: #666;
-        }
-        /* Responsive for mobile */
-        @media (max-width: 480px) {
-            #tree {
-                font-size: 80px;
-            }
-            button {
-                font-size: 14px;
-                padding: 8px 16px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4 Pics 1 Word - Environmental Education</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .image-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #word-display span {
+      display: inline-block;
+      width: 2.5rem;
+      height: 3rem;
+      border-bottom: 3px solid #1f2937;
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: bold;
+      margin: 0 0.3rem;
+      background-color: #f3f4f6;
+      border-radius: 4px;
+      line-height: 3rem;
+    }
+    #letter-bank button {
+      width: 2.75rem;
+      height: 2.75rem;
+      margin: 0.3rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+    #letter-bank button:hover:not(:disabled) {
+      transform: scale(1.1);
+    }
+    #letter-bank button:disabled {
+      cursor: not-allowed;
+    }
+    @media (max-width: 640px) {
+      #word-display span {
+        width: 1.75rem;
+        height: 2.25rem;
+        font-size: 1.25rem;
+        line-height: 2.25rem;
+      }
+      #letter-bank button {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+      }
+    }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Plant a Tree Simulator</h1>
-        <p>Water your tree to help it grow over time!</p>
-        <div id="tree">🌰</div>
-        <button id="water">Water the Tree</button>
-        <div id="status">Your tree is planted. Water it to grow!</div>
-        <div id="timer">Time: 0 seconds</div>
+<body class="bg-green-100 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+    <h1 class="text-2xl md:text-3xl font-bold text-center mb-4 text-green-700">4 Pics 1 Word - Environmental Education</h1>
+    <div class="flex justify-between mb-4">
+      <div id="timer" class="text-lg md:text-xl font-semibold text-green-600" role="timer">Time: 60s</div>
+      <div id="score" class="text-lg md:text-xl font-semibold text-green-600" role="status">Score: 0</div>
     </div>
+    <div id="game-container" class="grid grid-cols-2 gap-4 mb-6">
+      <div class="image-container"><img id="img1" src="" alt="Environmental image 1" loading="lazy"></div>
+      <div class="image-container"><img id="img2" src="" alt="Environmental image 2" loading="lazy"></div>
+      <div class="image-container"><img id="img3" src="" alt="Environmental image 3" loading="lazy"></div>
+      <div class="image-container"><img id="img4" src="" alt="Environmental image 4" loading="lazy"></div>
+    </div>
+    <div id="word-display" class="text-center mb-4" role="region" aria-live="polite"></div>
+    <div id="letter-bank" class="flex flex-wrap justify-center mb-4"></div>
+    <div id="message" class="text-center text-lg font-semibold mb-4 text-green-600" role="alert"></div>
+    <button id="next-btn" class="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-600 hidden" aria-label="Next puzzle">Next Puzzle</button>
+    <button id="restart-btn" class="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 hidden mt-2" aria-label="Restart game">Restart Game</button>
+  </div>
 
-    <script>
-        let stage = 0;
-        let stages = ['🌰', '🌱', '🌿', '🌳'];
-        let time = 0;
-        let watered = false;
-        let needsWater = false;
+  <script>
+    const puzzles = [
+      {
+        word: "TREE",
+        images: [
+          "i1.jpg",
+          "i2.jpg",
+          "i3.jpg",
+          "https://images.pexels.com/photos/15286/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop"
+        ]
+      },
+      {
+        word: "WATER",
+        images: [
+          "i4.jpg",
+          "https://images.pexels.com/photos/1533720/pexels-photo-1533720.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop",
+          "https://images.pexels.com/photos/462162/pexels-photo-462162.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop",
+          "https://images.pexels.com/photos/261403/pexels-photo-261403.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop"
+        ]
+      },
+      {
+        word: "SOIL",
+        images: [
+          "i5.jpg",
+          "i6.jpg",
+          "i7.jpg",
+          "i8.jpg"
+        ]
+      }
+    ];
 
-        const treeElement = document.getElementById('tree');
-        const statusElement = document.getElementById('status');
-        const timerElement = document.getElementById('timer');
-        const waterButton = document.getElementById('water');
+    let currentPuzzle = 0;
+    let score = 0;
+    let timeLeft = 60;
+    let timerInterval;
+    let currentGuess = [];
+    let gameOver = false;
+    let usedButtons = [];
 
-        // Update timer and check growth every second
-        setInterval(() => {
-            time++;
-            timerElement.innerText = `Time: ${time} seconds`;
+    const images = document.querySelectorAll("#game-container img");
+    const wordDisplay = document.getElementById("word-display");
+    const letterBank = document.getElementById("letter-bank");
+    const message = document.getElementById("message");
+    const nextBtn = document.getElementById("next-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const timerDisplay = document.getElementById("timer");
+    const scoreDisplay = document.getElementById("score");
 
-            // Every 10 seconds, check if watered
-            if (time % 10 === 0) {
-                if (watered) {
-                    stage++;
-                    if (stage > 3) stage = 3;
-                    treeElement.innerText = stages[stage];
-                    statusElement.innerText = 'Your tree grew! Keep watering.';
-                    watered = false;
-                    needsWater = false;
-                } else {
-                    statusElement.innerText = 'Tree needs water to grow!';
-                    needsWater = true;
-                }
-            }
-        }, 1000);
+    function startGame() {
+      gameOver = false;
+      currentPuzzle = 0;
+      score = 0;
+      scoreDisplay.textContent = `Score: ${score}`;
+      loadPuzzle();
+    }
 
-        // Water button click
-        waterButton.addEventListener('click', () => {
-            watered = true;
-            statusElement.innerText = 'You watered the tree! Waiting for growth...';
-            needsWater = false;
-        });
-    </script>
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 60;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          gameOver = true;
+          message.textContent = "Time's up! Game Over!";
+          message.className = "text-center text-lg font-semibold mb-4 text-red-600";
+          disableLetters();
+          restartBtn.classList.remove("hidden");
+        }
+      }, 1000);
+    }
+
+    function loadPuzzle() {
+      if (currentPuzzle >= puzzles.length) {
+        gameOver = true;
+        clearInterval(timerInterval);
+        message.textContent = `Congratulations! You completed all puzzles! Final Score: ${score}`;
+        message.className = "text-center text-lg font-semibold mb-4 text-green-600";
+        disableLetters();
+        restartBtn.classList.remove("hidden");
+        return;
+      }
+
+      const puzzle = puzzles[currentPuzzle];
+      
+      // Load images with better error handling
+      images.forEach((img, index) => {
+        img.style.opacity = "0.5";
+        img.onload = () => { img.style.opacity = "1"; };
+        img.onerror = () => { 
+          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+          img.style.opacity = "1";
+        };
+        img.src = puzzle.images[index];
+      });
+
+      // Initialize word display
+      wordDisplay.innerHTML = puzzle.word.split("").map(() => `<span>_</span>`).join("");
+      currentGuess = Array(puzzle.word.length).fill(null);
+      usedButtons = [];
+
+      // Generate letter bank
+      const letters = generateLetterBank(puzzle.word);
+      letterBank.innerHTML = "";
+      letters.forEach((letter, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = letter;
+        btn.className = "bg-green-300 hover:bg-green-400 rounded focus:outline-none focus:ring-2 focus:ring-green-500";
+        btn.setAttribute("aria-label", `Letter ${letter}`);
+        btn.dataset.index = index;
+        btn.addEventListener("click", () => selectLetter(letter, btn));
+        letterBank.appendChild(btn);
+      });
+
+      // Reset UI state
+      message.textContent = "";
+      message.className = "text-center text-lg font-semibold mb-4 text-green-600";
+      nextBtn.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      
+      startTimer();
+    }
+
+    function generateLetterBank(word) {
+      const wordLetters = word.split("");
+      const extraLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").filter(l => !word.includes(l));
+      const fillerCount = Math.max(8 - word.length, 3);
+      const fillers = shuffle([...extraLetters]).slice(0, fillerCount);
+      return shuffle([...wordLetters, ...fillers]);
+    }
+
+    function selectLetter(letter, btn) {
+      if (gameOver || btn.disabled) return;
+      
+      const emptyIndex = currentGuess.findIndex(val => val === null);
+      if (emptyIndex === -1) return; // Word is full
+      
+      currentGuess[emptyIndex] = letter;
+      usedButtons.push(btn);
+      updateWordDisplay();
+      btn.disabled = true;
+      btn.classList.add("opacity-50", "cursor-not-allowed");
+      btn.classList.remove("hover:bg-green-400");
+      
+      // Check if word is complete
+      if (!currentGuess.includes(null)) {
+        setTimeout(checkGuess, 100); // Small delay for better UX
+      }
+    }
+
+    function updateWordDisplay() {
+      wordDisplay.innerHTML = currentGuess.map(letter => `<span>${letter || "_"}</span>`).join("");
+    }
+
+    function checkGuess() {
+      if (currentGuess.includes(null)) return;
+
+      const guess = currentGuess.join("");
+      const correctWord = puzzles[currentPuzzle].word;
+      
+      if (guess === correctWord) {
+        clearInterval(timerInterval);
+        const bonus = timeLeft * 10;
+        score += bonus;
+        scoreDisplay.textContent = `Score: ${score}`;
+        message.textContent = `Correct! Great job! Bonus: +${bonus} points`;
+        message.className = "text-center text-lg font-semibold mb-4 text-green-600";
+        disableLetters();
+        nextBtn.classList.remove("hidden");
+      } else {
+        message.textContent = "Incorrect, try again!";
+        message.className = "text-center text-lg font-semibold mb-4 text-red-600";
+        setTimeout(resetCurrentGuess, 1500);
+      }
+    }
+
+    function resetCurrentGuess() {
+      currentGuess = Array(puzzles[currentPuzzle].word.length).fill(null);
+      updateWordDisplay();
+      
+      // Re-enable used buttons
+      usedButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50", "cursor-not-allowed");
+        btn.classList.add("hover:bg-green-400");
+      });
+      usedButtons = [];
+      
+      message.textContent = "";
+      message.className = "text-center text-lg font-semibold mb-4 text-green-600";
+    }
+
+    function disableLetters() {
+      letterBank.querySelectorAll("button").forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add("opacity-50", "cursor-not-allowed");
+        btn.classList.remove("hover:bg-green-400");
+      });
+    }
+
+    function shuffle(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      currentPuzzle++;
+      loadPuzzle();
+    });
+
+    restartBtn.addEventListener("click", startGame);
+
+    // Initialize the game
+    startGame();
+  </script>
 </body>
 </html>
