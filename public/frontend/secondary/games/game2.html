@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Eco Builder - Build Your Ecosystem</title>
     <style>
         body {
@@ -11,22 +11,30 @@
             background-color: #f0f8f0;
             color: #333;
             padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1000px;
+            width: 90%;
             margin: 0 auto;
             text-align: center;
             padding: 20px;
+            position: relative;
         }
 
         h1 {
-            font-size: 32px;
+            font-size: clamp(1.5rem, 4vw, 2rem);
             color: #228B22;
+            margin: 0.5em 0;
         }
 
         p {
-            font-size: 16px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             margin-bottom: 20px;
         }
 
@@ -49,10 +57,10 @@
             background-color: #228B22;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 15px);
             cursor: pointer;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
         }
 
         .tool-btn:hover {
@@ -64,7 +72,7 @@
         }
 
         .score, .timer {
-            font-size: 18px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             padding: 10px;
             background-color: #90EE90;
             border-radius: 5px;
@@ -72,7 +80,7 @@
         }
 
         .instructions {
-            font-size: 14px;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
             max-width: 600px;
             margin: 20px auto;
             background-color: #fff;
@@ -81,12 +89,46 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
+        #start-screen, #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: clamp(10px, 3vw, 20px);
+            border-radius: 10px;
+            display: none;
+            max-width: 90%;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 10;
+        }
+
+        #start-screen h1, #game-over h1 {
+            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+        }
+
+        #start-screen p, #game-over p {
+            font-size: clamp(0.8rem, 2vw, 1rem);
+        }
+
+        .start-btn, .restart-btn {
+            padding: clamp(8px, 2vw, 12px) clamp(16px, 3vw, 24px);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            background-color: #228B22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            background-color: #1a6e1a;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 24px;
-            }
-
             .toolbar {
                 flex-direction: column;
                 align-items: center;
@@ -98,11 +140,30 @@
             }
 
             .instructions {
-                font-size: 12px;
+                font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: clamp(1rem, 3vw, 1.5rem);
+            }
+
+            .tool-btn {
+                width: 90%;
+                font-size: clamp(0.7rem, 1.8vw, 0.8rem);
             }
 
             .score, .timer {
-                font-size: 16px;
+                font-size: clamp(0.8rem, 2vw, 0.9rem);
+            }
+
+            #start-screen h1, #game-over h1 {
+                font-size: clamp(1rem, 2.5vw, 1.5rem);
+            }
+
+            #start-screen p, #game-over p {
+                font-size: clamp(0.7rem, 1.8vw, 0.8rem);
             }
         }
     </style>
@@ -119,11 +180,22 @@
             <button class="tool-btn" data-tool="fox">Add Fox</button>
             <button class="tool-btn" data-tool="remove">Remove Item</button>
             <div class="score">Sustainability Points: <span id="score">0</span></div>
-            <div class="timer">Time Left: <span id="timer">00:60</span></div>
+            <div class="timer">Time Left: <span id="timer">01:00</span></div>
         </div>
         <div class="instructions">
             <h3>How to Play</h3>
-            <p>Click to place trees, water, rabbits, or foxes on the grid. Balance is key—too many animals or not enough resources cause problems! Watch for droughts or overpopulation. Use 'Remove Item' to clear elements. Achieve the highest score in 60 seconds!</p>
+            <p>Click or tap to place trees, water, rabbits, or foxes on the grid. Balance is key—too many animals or not enough resources cause problems! Watch for droughts or overpopulation. Use 'Remove Item' to clear elements. Achieve the highest score in 60 seconds!</p>
+        </div>
+        <div id="start-screen">
+            <h1>Eco Builder</h1>
+            <p>Build a sustainable ecosystem by placing trees, water, rabbits, and foxes.</p>
+            <p>Click or tap to place items. Balance resources and animals to earn points!</p>
+            <button class="start-btn">Start Game</button>
+        </div>
+        <div id="game-over">
+            <h1>Game Over</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button class="restart-btn">Play Again</button>
         </div>
     </div>
     <script>
@@ -131,6 +203,11 @@
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const timerElement = document.getElementById('timer');
+        const finalScoreElement = document.getElementById('final-score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const startButton = document.querySelector('.start-btn');
+        const restartButton = document.querySelector('.restart-btn');
 
         const GRID_SIZE = 20;
         let CELL_SIZE;
@@ -141,6 +218,8 @@
         let populationCheck = 0;
         let gameTime = 60;
         let timerInterval;
+        let ecosystemInterval;
+        let gameRunning = false;
 
         const tools = {
             tree: { color: '#228B22', symbol: '🌳', resource: true },
@@ -150,7 +229,7 @@
         };
 
         function resizeCanvas() {
-            const maxSize = Math.min(window.innerWidth, window.innerHeight) - 40;
+            const maxSize = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.8);
             CELL_SIZE = Math.floor(maxSize / GRID_SIZE);
             canvas.width = GRID_SIZE * CELL_SIZE;
             canvas.height = GRID_SIZE * CELL_SIZE;
@@ -163,9 +242,9 @@
         resizeCanvas();
 
         function updateTimer() {
+            if (!gameRunning) return;
             if (gameTime <= 0) {
-                clearInterval(timerInterval);
-                alert(`Time's up! Final Score: ${score}. Try again to beat your score!`);
+                endGame();
                 return;
             }
             gameTime--;
@@ -174,16 +253,39 @@
             timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        function startTimer() {
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            gameRunning = true;
+            score = 0;
+            gameTime = 60;
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+            scoreElement.textContent = score;
+            timerElement.textContent = '01:00';
+            selectedTool = null;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('selected'));
             timerInterval = setInterval(updateTimer, 1000);
+            ecosystemInterval = setInterval(updateEcosystem, 1000);
+            render();
         }
 
-        canvas.addEventListener('click', (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((event.clientX - rect.left) / CELL_SIZE);
-            const y = Math.floor((event.clientY - rect.top) / CELL_SIZE);
+        function endGame() {
+            clearInterval(timerInterval);
+            clearInterval(ecosystemInterval);
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
 
-            if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+        function handleInteraction(event) {
+            event.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const clientX = event.type === 'click' ? event.clientX : event.touches[0].clientX;
+            const clientY = event.type === 'click' ? event.clientY : event.touches[0].clientY;
+            const x = Math.floor((clientX - rect.left) / CELL_SIZE);
+            const y = Math.floor((clientY - rect.top) / CELL_SIZE);
+
+            if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && gameRunning) {
                 if (selectedTool === 'remove') {
                     if (grid[y][x]) {
                         grid[y][x] = null;
@@ -193,11 +295,14 @@
                 } else if (selectedTool && grid[y][x] === null) {
                     const item = { ...tools[selectedTool], count: 1 };
                     grid[y][x] = item;
-                    updateScore(5);
+                    updateScore(1);
                     render();
                 }
             }
-        });
+        }
+
+        canvas.addEventListener('click', handleInteraction);
+        canvas.addEventListener('touchstart', handleInteraction);
 
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -206,6 +311,9 @@
                 btn.classList.add('selected');
             });
         });
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
 
         function consumeResource(amount) {
             for (let i = 0; i < amount; i++) {
@@ -265,6 +373,7 @@
         }
 
         function updateEcosystem() {
+            if (!gameRunning) return;
             let totalResources = 0;
             let rabbits = 0;
             let foxes = 0;
@@ -287,23 +396,22 @@
                     const cell = grid[y][x];
                     if (cell) {
                         if (cell.resource) {
-                            cell.count = Math.min(cell.count + 1, 5); // Resources grow
+                            // Resources don't grow automatically
                         } else if (cell.population === 1) { // Rabbits
-                            if (Math.random() < 0.3) {
-                                if (totalResources > 0) {
-                                    consumeResource(1);
-                                    cell.count++;
-                                }
+                            if (Math.random() < 0.2 && totalResources > 0) {
+                                consumeResource(1);
+                                cell.count++;
+                                updateScore(2);
                             }
                         } else if (cell.population === 2) { // Foxes
-                            if (Math.random() < 0.4) {
-                                if (rabbits > 0) {
-                                    consumeRabbit(1);
-                                    cell.count++;
-                                }
+                            if (Math.random() < 0.3 && rabbits > 0) {
+                                consumeRabbit(1);
+                                cell.count++;
+                                updateScore(3);
                             }
-                            if (rabbits < 2) {
+                            if (rabbits < 1) {
                                 cell.count = Math.max(0, cell.count - 1);
+                                if (cell.count === 0) grid[y][x] = null;
                             }
                         }
                     }
@@ -312,14 +420,14 @@
 
             // Drought or overpopulation check
             droughtTimer++;
-            if (droughtTimer > 60 && Math.random() < 0.1) {
-                consumeResource(2);
-                updateScore(-10);
+            if (droughtTimer >= 30 && Math.random() < 0.1) {
+                consumeResource(1);
+                updateScore(-5);
                 droughtTimer = 0;
             }
             populationCheck++;
-            if (populationCheck > 100 && (rabbits > totalResources || foxes > rabbits / 2)) {
-                updateScore(-15);
+            if (populationCheck >= 20 && (rabbits > totalResources * 2 || foxes > rabbits)) {
+                updateScore(-10);
                 populationCheck = 0;
             }
 
@@ -329,16 +437,9 @@
         function updateScore(points) {
             score += points;
             scoreElement.textContent = score;
-            if (score < 0) {
-                clearInterval(timerInterval);
-                alert(`Game Over! Ecosystem unbalanced. Time Left: ${timerElement.textContent}, Score: ${score}. Try again!`);
-                gameTime = 0; // Stop the game
-            }
         }
 
-        setInterval(updateEcosystem, 1000);
-        startTimer();
-        render();
+        startScreen.style.display = 'block';
     </script>
 </body>
 </html>
