@@ -44,9 +44,20 @@
             margin: 10px 0;
         }
 
+        #score {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
         #guessed-letters {
             font-size: 1.2em;
             margin: 10px 0;
+        }
+
+        #hint-display {
+            font-size: 1em;
+            margin: 10px 0;
+            color: #FFD700; /* Gold for hints */
         }
 
         #input-container {
@@ -69,12 +80,6 @@
             border: none;
             cursor: pointer;
             margin: 0 5px;
-        }
-
-        #hint-display {
-            font-size: 1em;
-            margin: 10px 0;
-            color: #FFD700; /* Gold for hints */
         }
 
         #instructions {
@@ -165,7 +170,7 @@
                 letter-spacing: 2px;
             }
 
-            #guesses-left, #guessed-letters, #hint-display {
+            #guesses-left, #score, #guessed-letters, #hint-display {
                 font-size: 1em;
             }
 
@@ -197,7 +202,7 @@
                 line-height: 1.3;
             }
         }
-        h1{
+        h1 {
             padding-top: 50px;
         }
     </style>
@@ -206,13 +211,14 @@
     <div id="game-container">
         <h1>Eco Hangman</h1>
         <div id="instructions">
-            <strong>How to Play:</strong> Guess the environmental science word by entering one letter at a time. You have 6 wrong guesses before the game ends. Each wrong guess adds a part to the hangman. Use the on-screen keyboard or type a letter and click "Guess". Click "Hint" for a clue about the word (costs 1 guess). Win by revealing the full word before running out of guesses!
+            <strong>How to Play:</strong> Guess the environmental science word by entering one letter at a time. You have 6 wrong guesses before the game ends. Each wrong guess removes a part of the hangman (legs, arms, head, body). Use the on-screen keyboard or type a letter and click "Guess". Click "Hint" for a clue about the word (costs 1 guess). Win by revealing the full word before the hangman’s body parts disappear! Earn 10 points for each win.
         </div>
         <canvas id="canvas"></canvas>
         <div id="word-display"></div>
         <div id="guesses-left">Guesses Left: 6</div>
+        <div id="score">Score: 0</div>
         <div id="guessed-letters">Guessed Letters: </div>
-        <div id="hint-display">Hint: </div>
+        <div id="hint-display">Question: </div>
         <div id="input-container">
             <input type="text" id="letter-input" maxlength="1" placeholder="A-Z">
             <button id="guess-btn">Guess</button>
@@ -226,6 +232,7 @@
         const ctx = canvas.getContext('2d');
         const wordDisplay = document.getElementById('word-display');
         const guessesLeftElement = document.getElementById('guesses-left');
+        const scoreElement = document.getElementById('score');
         const guessedLettersElement = document.getElementById('guessed-letters');
         const hintDisplay = document.getElementById('hint-display');
         const letterInput = document.getElementById('letter-input');
@@ -233,25 +240,27 @@
         const hintButton = document.getElementById('hint-btn');
         const keyboard = document.getElementById('keyboard');
 
-        // Environmental science words with hints
+        // Environmental science words with hints and questions
         const words = [
-            { word: 'ECOSYSTEM', hint: 'A community of living organisms interacting with their environment.' },
-            { word: 'POLLUTION', hint: 'Harmful substances introduced into the environment.' },
-            { word: 'RECYCLING', hint: 'Process of reusing materials to reduce waste.' },
-            { word: 'BIODIVERSITY', hint: 'Variety of life in an ecosystem.' },
-            { word: 'CARBON', hint: 'Element central to greenhouse gas emissions.' },
-            { word: 'SUSTAINABLE', hint: 'Practices that meet needs without harming future generations.' },
-            { word: 'RENEWABLE', hint: 'Resources that can be naturally replenished.' },
-            { word: 'DEFORESTATION', hint: 'Clearing of forests leading to environmental harm.' },
-            { word: 'GREENHOUSE', hint: 'Gases trapping heat in the atmosphere.' },
-            { word: 'COMPOST', hint: 'Organic matter decomposed for soil enrichment.' }
+            { word: 'ECOSYSTEM', hint: 'A community of living organisms interacting with their environment.', question: 'What term describes a community of organisms interacting with their physical environment?' },
+            { word: 'POLLUTION', hint: 'Harmful substances introduced into the environment.', question: 'What is the term for harmful substances contaminating air, water, or soil?' },
+            { word: 'RECYCLING', hint: 'Process of reusing materials to reduce waste.', question: 'What process involves reusing materials to minimize waste production?' },
+            { word: 'BIODIVERSITY', hint: 'Variety of life in an ecosystem.', question: 'What term refers to the variety of species in an ecosystem?' },
+            { word: 'CARBON', hint: 'Element central to greenhouse gas emissions.', question: 'Which chemical element is a key component of greenhouse gases?' },
+            { word: 'SUSTAINABLE', hint: 'Practices that meet needs without harming future generations.', question: 'What term describes practices that preserve resources for future generations?' },
+            { word: 'RENEWABLE', hint: 'Resources that can be naturally replenished.', question: 'What type of resources can be naturally replenished over time?' },
+            { word: 'DEFORESTATION', hint: 'Clearing of forests leading to environmental harm.', question: 'What is the term for the large-scale removal of forest areas?' },
+            { word: 'GREENHOUSE', hint: 'Gases trapping heat in the atmosphere.', question: 'What type of gases contribute to the warming of Earth’s atmosphere?' },
+            { word: 'COMPOST', hint: 'Organic matter decomposed for soil enrichment.', question: 'What is the term for decomposed organic matter used to enrich soil?' }
         ];
 
         let currentWord = '';
         let currentHint = '';
+        let currentQuestion = '';
         let displayedWord = [];
         let guessedLetters = [];
         let guessesLeft = 6;
+        let score = 0;
         let gameOver = false;
 
         // Set canvas size
@@ -262,51 +271,80 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Draw hangman
+        // Draw hangman (starts with full figure, removes body parts on wrong guesses)
         function drawHangman() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 3;
 
             // Base
-            if (guessesLeft < 6) {
-                ctx.beginPath();
-                ctx.moveTo(canvas.width * 0.1, canvas.height * 0.9);
-                ctx.lineTo(canvas.width * 0.4, canvas.height * 0.9);
-                ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.1, canvas.height * 0.9);
+            ctx.lineTo(canvas.width * 0.4, canvas.height * 0.9);
+            ctx.stroke();
+
             // Pole
-            if (guessesLeft < 5) {
-                ctx.beginPath();
-                ctx.moveTo(canvas.width * 0.25, canvas.height * 0.9);
-                ctx.lineTo(canvas.width * 0.25, canvas.height * 0.1);
-                ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.25, canvas.height * 0.9);
+            ctx.lineTo(canvas.width * 0.25, canvas.height * 0.1);
+            ctx.stroke();
+
             // Top bar
-            if (guessesLeft < 4) {
-                ctx.beginPath();
-                ctx.moveTo(canvas.width * 0.25, canvas.height * 0.1);
-                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.1);
-                ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.25, canvas.height * 0.1);
+            ctx.lineTo(canvas.width * 0.5, canvas.height * 0.1);
+            ctx.stroke();
+
             // Rope
-            if (guessesLeft < 3) {
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.5, canvas.height * 0.1);
+            ctx.lineTo(canvas.width * 0.5, canvas.height * 0.2);
+            ctx.stroke();
+
+            // Body
+            if (guessesLeft >= 1) {
                 ctx.beginPath();
-                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.1);
-                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.2);
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.3);
+                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.5);
                 ctx.stroke();
             }
+
             // Head
-            if (guessesLeft < 2) {
+            if (guessesLeft >= 2) {
                 ctx.beginPath();
                 ctx.arc(canvas.width * 0.5, canvas.height * 0.25, canvas.height * 0.05, 0, Math.PI * 2);
                 ctx.stroke();
             }
-            // Body
-            if (guessesLeft < 1) {
+
+            // Left Arm
+            if (guessesLeft >= 3) {
                 ctx.beginPath();
-                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.3);
-                ctx.lineTo(canvas.width * 0.5, canvas.height * 0.5);
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.35);
+                ctx.lineTo(canvas.width * 0.4, canvas.height * 0.4);
+                ctx.stroke();
+            }
+
+            // Right Arm
+            if (guessesLeft >= 4) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.35);
+                ctx.lineTo(canvas.width * 0.6, canvas.height * 0.4);
+                ctx.stroke();
+            }
+
+            // Left Leg
+            if (guessesLeft >= 5) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.5);
+                ctx.lineTo(canvas.width * 0.4, canvas.height * 0.6);
+                ctx.stroke();
+            }
+
+            // Right Leg
+            if (guessesLeft >= 6) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * 0.5, canvas.height * 0.5);
+                ctx.lineTo(canvas.width * 0.6, canvas.height * 0.6);
                 ctx.stroke();
             }
         }
@@ -316,11 +354,12 @@
             const wordObj = words[Math.floor(Math.random() * words.length)];
             currentWord = wordObj.word;
             currentHint = wordObj.hint;
+            currentQuestion = wordObj.question;
             displayedWord = Array(currentWord.length).fill('_');
             guessedLetters = [];
             guessesLeft = 6;
             gameOver = false;
-            hintDisplay.textContent = 'Hint: ';
+            hintDisplay.textContent = 'Question: ' + currentQuestion;
             updateDisplay();
             drawHangman();
             createKeyboard();
@@ -331,7 +370,7 @@
             letterInput.focus();
         }
 
-        // Update word and guesses display
+        // Update word, guesses, and score display
         function updateDisplay() {
             if (gameOver && guessesLeft === 0) {
                 wordDisplay.textContent = currentWord.split('').join(' ');
@@ -339,6 +378,7 @@
                 wordDisplay.textContent = displayedWord.join(' ');
             }
             guessesLeftElement.textContent = `Guesses Left: ${guessesLeft}`;
+            scoreElement.textContent = `Score: ${score}`;
             guessedLettersElement.textContent = `Guessed Letters: ${guessedLetters.join(', ')}`;
         }
 
@@ -382,15 +422,17 @@
             // Check win/lose
             if (displayedWord.join('') === currentWord) {
                 gameOver = true;
+                score += 10; // Add 10 points for a win
+                updateDisplay();
                 setTimeout(() => {
-                    alert('You Win! The word was ' + currentWord);
+                    alert(`You Win! The word was ${currentWord}. Your score: ${score}`);
                     startGame();
                 }, 100);
             } else if (guessesLeft === 0) {
                 gameOver = true;
                 updateDisplay(); // Show the full word
                 setTimeout(() => {
-                    alert('Game Over! The word was ' + currentWord);
+                    alert(`Game Over! The word was ${currentWord}. Your score: ${score}`);
                     startGame();
                 }, 100);
             }
@@ -408,7 +450,7 @@
                 gameOver = true;
                 updateDisplay(); // Show the full word
                 setTimeout(() => {
-                    alert('Game Over! The word was ' + currentWord);
+                    alert(`Game Over! The word was ${currentWord}. Your score: ${score}`);
                     startGame();
                 }, 100);
             }
