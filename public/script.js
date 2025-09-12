@@ -11,6 +11,9 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        
+        // Store Firebase config for other pages
+        localStorage.setItem('firebaseConfig', JSON.stringify(firebaseConfig));
 
         // Global variables
         let currentUser = null;
@@ -18,6 +21,36 @@
         // DOM Elements
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
+
+        // Update progress ring
+        function updateProgressRing(percentage, ringId, textId) {
+            const ring = document.getElementById(ringId);
+            const text = document.getElementById(textId);
+            const radius = 60;
+            const circumference = 2 * Math.PI * radius;
+            
+            if (ring && text) {
+                const offset = circumference - (percentage / 100) * circumference;
+                ring.style.strokeDashoffset = offset;
+                ring.setAttribute('data-percentage', percentage);
+                text.textContent = percentage + '%';
+            }
+        }
+
+        // Listen for progress updates
+        function setupProgressListener(user) {
+            if (user) {
+                const progressRef = firebase.database().ref(`users/${user.uid}/progress`);
+                progressRef.on('value', (snapshot) => {
+                    const progress = snapshot.val() || {};
+                    
+                    // Update primary progress ring
+                    if (progress.primary !== undefined) {
+                        updateProgressRing(progress.primary, 'primaryProgressRing', 'primaryProgressText');
+                    }
+                });
+            }
+        }
         const authButtons = document.getElementById('authButtons');
         const userProfile = document.getElementById('userProfile');
         const profileIcon = document.getElementById('profileIcon');
@@ -49,6 +82,7 @@
                 };
                 updateNavBar(true);
                 updateProfileSection();
+                setupProgressListener(user);
                 // Save user data to localStorage
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
             } else {
