@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Circle Progress Sync</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f5f5f5;
+      font-family: Arial, sans-serif;
+    }
+
+    .sub_main.second {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-circle {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring__circle {
+      fill: transparent;
+      stroke-width: 10;
+      r: 52;
+      cx: 60;
+      cy: 60;
+    }
+
+    .progress-ring__background {
+      stroke: #ddd;
+    }
+
+    .progress-ring__progress {
+      stroke: #4CAF50;
+      stroke-dasharray: 326.73; /* circumference = 2πr */
+      stroke-dashoffset: 326.73;
+      transition: stroke-dashoffset 0.3s ease;
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="sub_main second">
+    <div class="first_sec">
+      <div class="activity">
+        <div class="progress-circle">
+          <svg class="progress-ring" width="120" height="120">
+            <circle class="progress-ring__circle progress-ring__background"></circle>
+            <circle class="progress-ring__circle progress-ring__progress" id="primaryProgressRing"
+              stroke-dashoffset="326.73" data-percentage="0"></circle>
+          </svg>
+          <div class="progress-text" id="primaryProgressText">0%</div>
+          <div class="progress-label"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const circle = document.getElementById("primaryProgressRing");
+    const text = document.getElementById("primaryProgressText");
+    const circumference = 2 * Math.PI * 52; // r=52
+
+    function updateCircleProgress() {
+      let progress = parseInt(localStorage.getItem("primaryProgress") || "0");
+      if (progress > 100) progress = 100;
+
+      const offset = circumference - (progress / 100) * circumference;
+      circle.style.strokeDashoffset = offset;
+      text.textContent = progress + "%";
+    }
+
+    // Run once on page load
+    updateCircleProgress();
+
+    // Auto update when localStorage changes
+    window.addEventListener("storage", updateCircleProgress);
+
+    // Also check every second (in case same tab updates localStorage)
+    setInterval(updateCircleProgress, 1000);
+  </script>
+</body>
+</html>

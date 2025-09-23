@@ -247,6 +247,8 @@
             align-items: center;
             gap: 20px;
             margin-bottom: 20px;
+            margin-left: 10px;
+            margin-top: 20px;
         }
         
         .profile-picture {

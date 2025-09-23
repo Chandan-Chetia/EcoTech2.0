@@ -357,6 +357,22 @@
             currentQuestion = wordObj.question;
             displayedWord = Array(currentWord.length).fill('_');
             guessedLetters = [];
+
+            // Reveal 1 or 2 letters randomly (1 for words <= 7 letters, 2 for longer words)
+            const numLettersToReveal = currentWord.length <= 7 ? 1 : 2;
+            const indices = [];
+            while (indices.length < numLettersToReveal) {
+                const randomIndex = Math.floor(Math.random() * currentWord.length);
+                if (!indices.includes(randomIndex)) {
+                    indices.push(randomIndex);
+                    const letter = currentWord[randomIndex];
+                    displayedWord[randomIndex] = letter;
+                    if (!guessedLetters.includes(letter)) {
+                        guessedLetters.push(letter);
+                    }
+                }
+            }
+
             guessesLeft = 6;
             gameOver = false;
             hintDisplay.textContent = 'Question: ' + currentQuestion;

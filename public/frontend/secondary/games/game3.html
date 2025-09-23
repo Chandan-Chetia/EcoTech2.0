@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geography Quiz with Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Eco Memory Match</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,13 +16,14 @@
             align-items: center;
             min-height: 100vh;
             text-align: center;
+            overflow: hidden;
         }
 
         #game-container {
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            padding: clamp(10px, 3vw, 20px);
             max-width: 700px;
             width: 90%;
         }
@@ -30,33 +31,28 @@
         h1 {
             color: #2196f3;
             margin-bottom: 20px;
+            font-size: clamp(1.5rem, 4vw, 2rem);
         }
 
         #instructions {
-            font-size: 1.1em;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             margin-bottom: 15px;
         }
 
         #timer {
-            font-size: 1.2em;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
             color: #f44336;
             margin-bottom: 10px;
         }
 
-        #question {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
         #feedback {
-            font-size: 1.1em;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             margin: 15px 0;
             color: #ff5722;
         }
 
         #score {
-            font-size: 1.1em;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             margin-top: 20px;
         }
 
@@ -64,10 +60,10 @@
             background-color: #4caf50;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: clamp(8px, 2vw, 10px) clamp(16px, 3vw, 20px);
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: clamp(0.8rem, 2vw, 1rem);
             margin-top: 10px;
             transition: background-color 0.3s;
             display: none;
@@ -77,111 +73,207 @@
             background-color: #388e3c;
         }
 
-        #map {
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(5px, 1vw, 10px);
             max-width: 100%;
-            height: auto;
+            margin: 0 auto;
         }
 
-        .country {
-            fill: #b0bec5;
-            stroke: #fff;
-            stroke-width: 0.5;
+        .card {
+            aspect-ratio: 1 / 1;
+            background-color: #b0bec5;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 3vw, 1.5rem);
             cursor: pointer;
-            transition: fill 0.3s;
+            transition: transform 0.3s, background-color 0.3s;
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        .country:hover {
-            fill: #90caf9;
+        .card.flipped {
+            background-color: #90caf9;
+            transform: rotateY(180deg);
         }
 
-        .correct {
-            fill: #4caf50 !important;
-        }
-
-        .incorrect {
-            fill: #f44336 !important;
+        .card.matched {
+            background-color: #4caf50;
+            cursor: default;
         }
 
         /* Responsive design */
         @media (max-width: 600px) {
             #game-container {
-                padding: 15px;
+                padding: clamp(8px, 2vw, 15px);
                 width: 95%;
             }
 
             h1 {
-                font-size: 1.5em;
+                font-size: clamp(1.2rem, 3.5vw, 1.5rem);
             }
 
-            #instructions, #question, #timer, #feedback {
-                font-size: 1em;
+            #instructions, #timer, #feedback, #score {
+                font-size: clamp(0.8rem, 2vw, 1rem);
             }
 
             #restart-btn {
-                padding: 8px 16px;
-                font-size: 0.9em;
+                padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 16px);
+                font-size: clamp(0.7rem, 1.8vw, 0.9rem);
             }
 
-            #map {
-                max-width: 100%;
+            #game-board {
+                grid-template-columns: repeat(4, 1fr);
+                gap: clamp(3px, 0.8vw, 8px);
+            }
+
+            .card {
+                font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #game-container {
+                padding: clamp(5px, 1.5vw, 10px);
+            }
+
+            h1 {
+                font-size: clamp(1rem, 3vw, 1.3rem);
+            }
+
+            #instructions, #timer, #feedback, #score {
+                font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+            }
+
+            #restart-btn {
+                padding: clamp(5px, 1.2vw, 7px) clamp(10px, 2vw, 14px);
+                font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+            }
+
+            #game-board {
+                gap: clamp(2px, 0.5vw, 6px);
+            }
+
+            .card {
+                font-size: clamp(0.6rem, 2vw, 1rem);
             }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <h1>Geography Quiz with Map</h1>
-        <p id="instructions">Click on the country shown in the question before the timer runs out!</p>
-        <div id="timer">Time: 15s</div>
-        <div id="question"></div>
-        <svg id="map" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
-            <!-- Simplified SVG map with a few countries -->
-            <path class="country" data-name="Brazil" d="M150 250 C150 300, 200 350, 250 350 C300 350, 350 300, 350 250 C350 200, 300 150, 250 150 C200 150, 150 200, 150 250 Z" />
-            <path class="country" data-name="Australia" d="M400 200 C400 250, 450 300, 500 300 C550 300, 600 250, 600 200 C600 150, 550 100, 500 100 C450 100, 400 150, 400 200 Z" />
-            <path class="country" data-name="Canada" d="M100 50 C100 100, 150 150, 200 150 C250 150, 300 100, 300 50 C300 0, 250 -50, 200 0 C150 0, 100 0, 100 50 Z" />
-            <path class="country" data-name="India" d="M350 100 C350 150, 400 200, 450 200 C500 200, 550 150, 550 100 C550 50, 500 0, 450 0 C400 0, 350 50, 350 100 Z" />
-        </svg>
+        <h1>Eco Memory Match</h1>
+        <p id="instructions">Flip cards to match environmental concepts before the timer runs out!</p>
+        <div id="timer">Time: 60s</div>
         <div id="feedback"></div>
-        <div id="score">Score: 0 / 0</div>
+        <div id="score">Score: 0 / 8</div>
+        <div id="game-board"></div>
         <button id="restart-btn">Play Again</button>
     </div>
 
     <script>
-        const countries = [
-            { name: 'Brazil', feedback: 'Brazil is in South America!' },
-            { name: 'Australia', feedback: 'Australia is a country and a continent!' },
-            { name: 'Canada', feedback: 'Canada is in North America!' },
-            { name: 'India', feedback: 'India is in Asia!' }
+        const ecoConcepts = [
+            { id: 'solar', content: '☀️', feedback: 'Solar Energy: Harnesses sunlight to produce clean, renewable power.' },
+            { id: 'wind', content: '🌬️', feedback: 'Wind Energy: Uses wind turbines to generate electricity, reducing carbon emissions.' },
+            { id: 'recycle', content: '♻️', feedback: 'Recycling: Reduces waste by reusing materials, conserving resources.' },
+            { id: 'forest', content: '🌳', feedback: 'Rainforests: Store carbon and support biodiversity, vital for climate stability.' },
+            { id: 'reef', content: '🐠', feedback: 'Coral Reefs: Support marine life but are threatened by warming oceans.' },
+            { id: 'pollution', content: '🛢️', feedback: 'Plastic Pollution: Harms marine ecosystems and requires urgent reduction.' },
+            { id: 'deforestation', content: '🪓', feedback: 'Deforestation: Destroys habitats and increases CO2, driving climate change.' },
+            { id: 'wetland', content: '🌾', feedback: 'Wetlands: Filter water and support wildlife, critical for ecosystem health.' }
         ];
 
-        let currentQuestion = 0;
+        const cards = [...ecoConcepts, ...ecoConcepts]; // Duplicate for pairs
+        let flippedCards = [];
+        let matchedPairs = 0;
         let score = 0;
-        let totalQuestions = countries.length;
-        let timeLeft = 15;
+        let timeLeft = 60;
         let timerInterval;
+        let gameRunning = false;
+        const totalPairs = ecoConcepts.length;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
         function startGame() {
-            currentQuestion = 0;
+            gameRunning = true;
+            matchedPairs = 0;
             score = 0;
-            timeLeft = 15;
-            updateScore();
+            timeLeft = 60;
+            flippedCards = [];
             document.getElementById('feedback').textContent = '';
             document.getElementById('restart-btn').style.display = 'none';
-            loadQuestion();
+            document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('score').textContent = `Score: ${score} / ${totalPairs}`;
+            setupBoard();
             startTimer();
         }
 
-        function loadQuestion() {
-            if (currentQuestion >= totalQuestions) {
-                endGame();
+        function setupBoard() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+            const shuffledCards = shuffle([...cards]);
+            shuffledCards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                cardElement.dataset.id = card.id;
+                cardElement.textContent = '';
+                cardElement.addEventListener('click', () => handleCardClick(cardElement, card));
+                cardElement.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleCardClick(cardElement, card);
+                });
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        function handleCardClick(cardElement, card) {
+            if (!gameRunning || cardElement.classList.contains('flipped') || cardElement.classList.contains('matched') || flippedCards.length >= 2) {
                 return;
             }
-            const country = countries[currentQuestion];
-            document.getElementById('question').textContent = `Find ${country.name} on the map!`;
-            document.getElementById('feedback').textContent = '';
-            timeLeft = 15;
-            document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
-            resetMap();
+
+            cardElement.classList.add('flipped');
+            cardElement.textContent = card.content;
+            flippedCards.push({ element: cardElement, id: card.id });
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            if (card1.id === card2.id) {
+                card1.element.classList.add('matched');
+                card2.element.classList.add('matched');
+                score++;
+                matchedPairs++;
+                document.getElementById('feedback').textContent = ecoConcepts.find(c => c.id === card1.id).feedback;
+                document.getElementById('feedback').style.color = '#4caf50';
+                updateScore();
+                flippedCards = [];
+                if (matchedPairs === totalPairs) {
+                    endGame();
+                }
+            } else {
+                document.getElementById('feedback').textContent = 'No match! Try again.';
+                document.getElementById('feedback').style.color = '#f44336';
+                setTimeout(() => {
+                    card1.element.classList.remove('flipped');
+                    card2.element.classList.remove('flipped');
+                    card1.element.textContent = '';
+                    card2.element.textContent = '';
+                    flippedCards = [];
+                }, 1000);
+            }
         }
 
         function startTimer() {
@@ -190,90 +282,26 @@
                 timeLeft--;
                 document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
                 if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById('feedback').textContent = `Time's up! The correct country was ${countries[currentQuestion].name}.`;
-                    document.getElementById('feedback').style.color = '#f44336';
-                    highlightCorrectCountry();
-                    setTimeout(nextQuestion, 2000);
+                    endGame();
                 }
             }, 1000);
         }
 
-        function checkAnswer(selectedCountry) {
-            clearInterval(timerInterval);
-            const correctCountry = countries[currentQuestion].name;
-            const paths = document.querySelectorAll('.country');
-            paths.forEach(path => {
-                path.style.pointerEvents = 'none'; // Disable further clicks
-                if (path.dataset.name === correctCountry) {
-                    path.classList.add('correct');
-                }
-                if (path.dataset.name === selectedCountry && selectedCountry !== correctCountry) {
-                    path.classList.add('incorrect');
-                }
-            });
-
-            if (selectedCountry === correctCountry) {
-                score++;
-                document.getElementById('feedback').textContent = `Correct! ${countries[currentQuestion].feedback}`;
-                document.getElementById('feedback').style.color = '#4caf50';
-            } else {
-                document.getElementById('feedback').textContent = `Oops! You clicked ${selectedCountry}. The correct country was ${correctCountry}. ${countries[currentQuestion].feedback}`;
-                document.getElementById('feedback').style.color = '#f44336';
-            }
-            updateScore();
-            setTimeout(nextQuestion, 2000);
-        }
-
-        function highlightCorrectCountry() {
-            const correctCountry = countries[currentQuestion].name;
-            const paths = document.querySelectorAll('.country');
-            paths.forEach(path => {
-                if (path.dataset.name === correctCountry) {
-                    path.classList.add('correct');
-                }
-            });
-        }
-
-        function resetMap() {
-            const paths = document.querySelectorAll('.country');
-            paths.forEach(path => {
-                path.classList.remove('correct', 'incorrect');
-                path.style.pointerEvents = 'auto';
-            });
-        }
-
-        function nextQuestion() {
-            currentQuestion++;
-            if (currentQuestion < totalQuestions) {
-                loadQuestion();
-                startTimer();
-            } else {
-                endGame();
-            }
-        }
-
         function endGame() {
             clearInterval(timerInterval);
-            document.getElementById('question').textContent = 'Game Over!';
-            document.getElementById('timer').textContent = '';
-            document.getElementById('feedback').textContent = `You finished the quiz!`;
+            gameRunning = false;
+            document.getElementById('feedback').textContent = `Game Over! You matched ${matchedPairs} pairs.`;
             document.getElementById('restart-btn').style.display = 'block';
             updateScore();
         }
 
         function updateScore() {
-            document.getElementById('score').textContent = `Score: ${score} / ${totalQuestions}`;
+            document.getElementById('score').textContent = `Score: ${score} / ${totalPairs}`;
         }
-
-        document.querySelectorAll('.country').forEach(path => {
-            path.addEventListener('click', () => {
-                checkAnswer(path.dataset.name);
-            });
-        });
 
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
         startGame();
     </script>
-
+</body>
+</html>

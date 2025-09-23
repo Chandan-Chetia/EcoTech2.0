@@ -1,12 +1,14 @@
 {
-  "name": "EcoTech",
+  "name": "EcoTech - Environmental Education Platform",
   "short_name": "EcoTech",
-  "description": "Environmental Education Platform",
+  "description": "An interactive platform for environmental education with gamified learning and real-world eco-tasks",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#c7f8f8",
   "theme_color": "#008080",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/frontend/favicon_io/android-chrome-192x192.png",
